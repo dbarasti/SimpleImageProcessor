@@ -70,23 +70,10 @@ public:
     }
 
     void parallelThreads(){
-
-        /*
-        // get all the images in a vector
-        std::vector<cv::Mat> images(filePaths.size());
-        auto imagesIterator = images.begin();
-        for (std::string &img: filePaths) {
-            *imagesIterator = cv::imread(img);
-            imagesIterator++;
-        }
-        */
-        // now find the correct number of images for each thread to process
+        // find the correct number of images for each thread to process
         int jobsSize = filePaths.size();
         int jobsForEach = jobsSize/nWorkers;
         int remainingJobs = jobsSize%nWorkers;
-
-        std::cout << "jobs size: " << jobsSize << " jobsForEach: " << jobsForEach << " remaining: " << remainingJobs << std::endl;
-
 
         int givenAway = 0;
 
@@ -106,10 +93,7 @@ public:
         }
 
         auto end = std::chrono::system_clock::now();
-        std::cout << "Parallel Threads time: "
-                  << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count() << "ms"
-                  << std::endl;
-
+        std::cout << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count() << std::endl;
     }
 
     void parallelOmp(){
@@ -117,6 +101,9 @@ public:
         std::vector<cv::Mat> processed(filePaths.size());
 
         auto imagesIterator = images.begin();
+
+        //since in the stdThreads implementation I have to account for the loading from disk of the images, here I also account for it, starting the timer before the disk loading
+        auto start = std::chrono::high_resolution_clock::now();
 
         // load images from disk
         for (std::string &currentFile: filePaths) {
@@ -126,7 +113,6 @@ public:
 
         auto processedIterator = processed.begin();
 
-        auto start = std::chrono::high_resolution_clock::now();
 
         // apply filters
 #pragma omp parallel for num_threads(nWorkers) schedule(dynamic, 1)
@@ -138,9 +124,7 @@ public:
 
         auto end = std::chrono::system_clock::now();
 
-        std::cout << "OMP Parallel time: "
-                  << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count() << "ms"
-                  << std::endl;
+        std::cout << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count() << std::endl;
 
         // saving to disk just one image, to check the correct application of the filters
         cv::Mat firstImage = *processed.begin();
