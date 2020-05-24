@@ -27,8 +27,8 @@ int main(int argc, char * argv[]) {
     int nWorkers = atoi(argv[3]);
 
     auto processor = ImageProcessor(path, iterations, nWorkers);
-    processor.sequentialProcessing();
-    processor.parallelOmp();
+    // processor.sequentialProcessing();
+    // processor.parallelOmp();
     processor.parallelThreads();
 
     return 0;

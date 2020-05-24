@@ -93,7 +93,7 @@ public:
         }
 
         auto end = std::chrono::system_clock::now();
-        std::cout << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count() << std::endl;
+        std::cout << nWorkers << " " << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count() << std::endl;
     }
 
     void parallelOmp(){
@@ -115,7 +115,7 @@ public:
 
         auto end = std::chrono::system_clock::now();
 
-        std::cout << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count() << std::endl;
+        std::cout << nWorkers << " " << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count() << std::endl;
 
         // saving to disk just one image, to check the correct application of the filters
         cv::Mat firstImage = *processed.begin();
