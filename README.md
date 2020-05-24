@@ -1,10 +1,10 @@
 # Simple Image Processor
 
-This is the fourth assignment for the class of [Parallel and Distributed Systems](http://didawiki.di.unipi.it/doku.php/magistraleinformaticanetworking/spm/sdpm09support) @Unipi. I developed two implementations for the problem of applying two openCV filters to a series of images, using different patterns.  
-
+This is the fourth assignment for the class of [Parallel and Distributed Systems](http://didawiki.di.unipi.it/doku.php/magistraleinformaticanetworking/spm/sdpm09support) @Unipi. I developed two implementations for the problem of applying two openCV filters to a series of images, using different patterns.   
+The two applied filters are: **Gaussian Blur** and **Sobel Filter**.  
 The two parallel implementations are:
-* **Standard C++ Threads** (see file [ImageProcessor.hpp](https://github.com/dbarasti/SimpleImageProcessor/blob/master/ImageProcessor.cpp)) and
-* **OMP Parallel For** (see file [ImageProcessor.cpp](https://github.com/dbarasti/SimpleImageProcessor/blob/master/ImageProcessor.cpp))
+* **Standard C++ Threads** (see file [ImageProcessor.cpp](ImageProcessor.cpp)) and
+* **OMP Parallel For** (see file [ImageProcessor.cpp](ImageProcessor.cpp))
   
 
 ## Getting Started
@@ -32,6 +32,20 @@ The executable can be found in the root directory of the project. Just run it wi
 
 ```./main <input_folder> <n_iterations> <nWorkers>``` 
 
+
+## Choices
+Prior the creation of the present parallel implementations, I developed a small benchmark to understand the weight of each filter application to a single image (in a sequential version of course). We can call this implementation **two-stages sequential pipeline**. You can find the code in the [ImageProcessor](ImageProcessor.cpp) class inside *sequentialProcessing()*.  
+It turned out that the Sobel filter is much heavier than the Gaussian Blur. Following are the results obtained:  
+* Gaussian Blur: ~4.5 ms/img
+* Sobel Filter: ~110 ms/img
+
+A good solution would have been to realise a two-stages pipeline with a farm at each stage, each with a number of workers proportional to the weight of the filter. A greater number of workers for the Sobel farm with respect to the workers of the Gaussian Blur farm would have helped absorbing the discrepancy between the two filters.
+
+![](plotting-and-data/img/farm-pipeline.png)
+
+However, since it was not possible to use implement a solution using the FastFlow library, I decided to code a different solution: a set of threads (cardinality determined by the **nWorkers** CL argument) to which is given a portion of the images. Every thread applies the two filters to the given subset of images and terminates its execution. The *main* function waits for the termination of each spawned thread and returns. This implementation is coded in the *parallelThreads* method, inside the class [ImageProcessor](ImageProcessor.cpp).
+
+The second solution applies the OpenMP parallel for to a simple sequential version. You can find the code in the *parallelOmp* method inside the class [ImageProcessor](ImageProcessor.cpp).
 
 ## Results
 The experience results are summarized in some plots that express the scalability and the speedup obtained running the code on the Xeon-phi machine.  
