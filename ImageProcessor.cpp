@@ -66,7 +66,7 @@ public:
 
         // saving to disk just one image, to check the correct application of the filters
         cv::Mat firstImage = *processed.begin();
-        cv::imwrite("test.jpg", firstImage);
+        cv::imwrite("sequential_test.jpg", firstImage);
     }
 
     void parallelThreads(){
@@ -97,26 +97,17 @@ public:
     }
 
     void parallelOmp(){
-        std::vector<cv::Mat> images(filePaths.size());
+
         std::vector<cv::Mat> processed(filePaths.size());
-
-        auto imagesIterator = images.begin();
-
         //since in the stdThreads implementation I have to account for the loading from disk of the images, here I also account for it, starting the timer before the disk loading
         auto start = std::chrono::high_resolution_clock::now();
 
-        // load images from disk
-        for (std::string &currentFile: filePaths) {
-            *imagesIterator = cv::imread(currentFile);
-            imagesIterator++;
-        }
-
         auto processedIterator = processed.begin();
-
 
         // apply filters
 #pragma omp parallel for num_threads(nWorkers) schedule(dynamic, 1)
-        for (cv::Mat &currentImage: images) {
+        for (std::string &currentFile: filePaths) {
+            auto currentImage = cv::imread(currentFile);
             cv::GaussianBlur(currentImage, currentImage, cv::Size(3, 3), 0, 0, cv::BORDER_DEFAULT);
             cv::Sobel(currentImage, *processedIterator, -1, 1, 1);
             processedIterator++;
@@ -128,7 +119,7 @@ public:
 
         // saving to disk just one image, to check the correct application of the filters
         cv::Mat firstImage = *processed.begin();
-        cv::imwrite("test.jpg", firstImage);
+        cv::imwrite("omp_test.jpg", firstImage);
 
     }
 };
